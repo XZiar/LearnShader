@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3DElement.h" />
     <ClInclude Include="rely.h" />
     <ClInclude Include="shaderUtil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="3DElement.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shaderUtil.cpp" />
   </ItemGroup>

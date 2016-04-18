@@ -1,10 +1,16 @@
 #include "rely.h"
 #include "shaderUtil.h"
+#include "3DElement.h"
 
 static GLuint ID_vs, ID_fs, ID_sp;
 static GLuint ID_modelMat, ID_viewMat, ID_projMat;
 static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4];
 static GLushort indices[80 * 80 * 4];
+
+static bool bMovPOI = false;
+static int sx, sy, mx, my;
+static Camera cam;
+
 
 void CreateSphere(const float radius, const unsigned int rings, const unsigned int sectors, float *vertices, float *normals, float *texcoords, GLushort *indices)
 {
@@ -59,8 +65,8 @@ void setSphere()
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID_normVBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);//normal
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);//normal
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -130,6 +136,9 @@ void display(void)
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	mat4 viewMat = glm::lookAt(glm::vec3(cam.position), glm::vec3(cam.position + cam.n), glm::vec3(cam.v));
+	glUniformMatrix4fv(ID_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
+
 	glBindVertexArray(ID_VAO[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -142,21 +151,17 @@ void display(void)
 
 void reshape(int w, int h)
 {
-	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	cam.resize(w & 0x8fc0, h & 0x8fc0);
+	glViewport((w & 0x3f) / 2, (h & 0x3f) / 2, cam.width, cam.height);
+
+	//mat4 projMat = glm::perspective(60.0f, (GLfloat)w / (GLfloat)h, 1.0f, 200.0f);
+	mat4 projMat = glm::perspective(cam.fovy, cam.aspect, cam.zNear, cam.zFar);
+	//mat4 viewMat = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, -1, 0));
 	
-	mat4 projMat = glm::perspective(60.0f, (GLfloat)w / (GLfloat)h, 1.0f, 200.0f);
-	mat4 viewMat = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, -1, 0));
 	mat4 modelMat;
 
 	glUniformMatrix4fv(ID_projMat, 1, GL_FALSE, glm::value_ptr(projMat));
-	glUniformMatrix4fv(ID_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
 	glUniformMatrix4fv(ID_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
-	
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(60.0, (GLfloat)w / (GLfloat)h, 1.0, 200.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -169,20 +174,61 @@ void keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
+void onMouse(int button, int state, int x, int y)
+{
+	switch (button)
+	{
+	case GLUT_LEFT_BUTTON:
+		if (state == GLUT_DOWN)
+		{
+			bMovPOI = true;
+			sx = x, sy = y;
+		}
+		else
+			bMovPOI = false;
+		return;
+	}
+
+}
+
+void onWheel(int button, int dir, int x, int y)
+{
+	if (dir == 1)//forward
+		cam.move(0, 0, -1);
+	else if (dir == -1)//backward
+		cam.move(0, 0, 1);
+	glutPostRedisplay();
+
+}
+
+void onMouse(int x, int y)
+{
+	if (bMovPOI)
+	{
+		int dx = x - sx, dy = y - sy;
+		sx = x, sy = y;
+		float pdx = 10.0*dx / cam.width, pdy = 10.0*dy / cam.height;
+		cam.move(-pdx, pdy, 0);
+		glutPostRedisplay();
+	}
+}
 
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(600, 400);
+	glutInitWindowSize(cam.width, cam.height);
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow(argv[0]);
 	glewInit();
 	init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
-	glutKeyboardFunc(keyboard);
 
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(onMouse);
+	glutMotionFunc(onMouse);
+	glutMouseWheelFunc(onWheel);
 
 	glutMainLoop();
 	return 0;

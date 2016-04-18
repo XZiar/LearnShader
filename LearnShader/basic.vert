@@ -12,5 +12,5 @@ void main()
 {
 	gl_Position = projMat * viewMat * modelMat * vec4(vert, 1.0f);
 	color = (vert - vec3(-1, -1, -1)) / 2;
-	//color = norm;
+	color = norm;
 }
