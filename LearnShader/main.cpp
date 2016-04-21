@@ -4,8 +4,7 @@
 
 static GLuint ID_vs, ID_fs, ID_sp;
 static GLuint ID_modelMat, ID_viewMat, ID_projMat;
-static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4];
-static GLushort indices[80 * 80 * 4];
+static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_idxVBO[4];
 
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
@@ -54,6 +53,7 @@ void setSphere()
 	float vertices[80 * 80 * 3];
 	float normals[80 * 80 * 3];
 	float texcoords[80 * 80 * 2];
+	GLushort indices[80 * 80 * 4];
 	CreateSphere(0.5f, 80, 80, vertices, normals, texcoords, indices);
 
 	glBindVertexArray(ID_VAO[1]);
@@ -68,6 +68,9 @@ void setSphere()
 	glEnableVertexAttribArray(1);//normal
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID_idxVBO[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
@@ -75,9 +78,10 @@ void setSphere()
 void init(void)
 {
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.0, 0.0, 0.0, 0.8);
-	glShadeModel(GL_FLAT);
 	glDepthFunc(GL_LEQUAL);
+
+	const GLubyte *version = glGetString(GL_VERSION);
+	printf("GL Version:%s\n", version);
 
 	loadShaders("basic.vert", "basic.frag", ID_vs, ID_fs);
 	setShader(ID_sp, ID_vs, ID_fs);
@@ -91,6 +95,7 @@ void init(void)
 	glGenVertexArrays(4, ID_VAO);
 	glGenBuffers(4, ID_vertVBO);
 	glGenBuffers(4, ID_normVBO);
+	glGenBuffers(4, ID_idxVBO);
 
 	glBindVertexArray(ID_VAO[0]);
 
@@ -139,11 +144,14 @@ void display(void)
 	mat4 viewMat = glm::lookAt(glm::vec3(cam.position), glm::vec3(cam.position + cam.n), glm::vec3(cam.v));
 	glUniformMatrix4fv(ID_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
 
+	mat4 modelMat;
+	glUniformMatrix4fv(ID_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
+
 	glBindVertexArray(ID_VAO[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glBindVertexArray(ID_VAO[1]);
-	glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, indices);
+	glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
 
 	glBindVertexArray(0);
 	glutSwapBuffers();
@@ -154,14 +162,8 @@ void reshape(int w, int h)
 	cam.resize(w & 0x8fc0, h & 0x8fc0);
 	glViewport((w & 0x3f) / 2, (h & 0x3f) / 2, cam.width, cam.height);
 
-	//mat4 projMat = glm::perspective(60.0f, (GLfloat)w / (GLfloat)h, 1.0f, 200.0f);
 	mat4 projMat = glm::perspective(cam.fovy, cam.aspect, cam.zNear, cam.zFar);
-	//mat4 viewMat = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, -1, 0));
-	
-	mat4 modelMat;
-
 	glUniformMatrix4fv(ID_projMat, 1, GL_FALSE, glm::value_ptr(projMat));
-	glUniformMatrix4fv(ID_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
 }
 
 void keyboard(unsigned char key, int x, int y)
