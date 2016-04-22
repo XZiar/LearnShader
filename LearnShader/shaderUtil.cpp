@@ -1,90 +1,120 @@
 #include "rely.h"
+#include "shaderUtil.h"
 
-bool loadShaders(const char * FName_vs, const char * FName_fs, GLuint & ID_vs, GLuint & ID_fs)
+oglShader::oglShader(ShaderType type, const char * fpath) : shaderType(type)
 {
-	ID_vs = glCreateShader(GL_VERTEX_SHADER);
-	ID_fs = glCreateShader(GL_FRAGMENT_SHADER);
+	FILE * fp;
+	if (fopen_s(&fp, fpath, "rb") != 0)
+		return;
 
-	FILE * FP_vs, * FP_fs;
-	fopen_s(&FP_vs, FName_vs, "rb");
-	fopen_s(&FP_fs, FName_fs, "rb");
+	fseek(fp, 0, SEEK_END);
+	long fsize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
-	fseek(FP_vs, 0, SEEK_END);
-	fseek(FP_fs, 0, SEEK_END);
+	dat = new char[fsize + 1];
+	fread(dat, fsize, 1, fp);
+	dat[fsize] = '\0';
 
-	long FileSize_vs = ftell(FP_vs),
-		FileSize_fs = ftell(FP_fs);
+	fclose(fp);
 
-	fseek(FP_vs, 0, SEEK_SET);
-	fseek(FP_fs, 0, SEEK_SET);
+	GLenum stype;
+	switch (type)
+	{
+	case ShaderType::Vertex:
+		stype = GL_VERTEX_SHADER; break;
+	case ShaderType::Fragment:
+		stype = GL_FRAGMENT_SHADER; break;
+	case ShaderType::Geometry:
+		stype = GL_GEOMETRY_SHADER; break;
+	case ShaderType::TessCtrl:
+		stype = 0; break;
+	case ShaderType::TessEval:
+		stype = 0; break;
+	}
+	shaderID = glCreateShader(stype);
+	glShaderSource(shaderID, 1, &dat, NULL);
+}
 
-	char * Dat_vs = new char[FileSize_vs + 1];
-	char * Dat_fs = new char[FileSize_fs + 1];
+oglShader::oglShader(oglShader && other)
+{
+	*this = move(other);
+}
 
-	fread(Dat_vs, FileSize_vs, 1, FP_vs);
-	fread(Dat_fs, FileSize_fs, 1, FP_fs);
-	Dat_fs[FileSize_fs] = Dat_vs[FileSize_vs] = '\0';
+oglShader & oglShader::operator = (oglShader && other)
+{
+	shaderID = other.shaderID;
+	shaderType = other.shaderType;
+	if (dat != nullptr)
+		delete[] dat;
+	dat = other.dat;
+	other.dat = nullptr;
+	other.shaderID = 0;
 
-	fclose(FP_vs);
-	fclose(FP_fs);
+	return *this;
+}
 
-	glShaderSource(ID_vs, 1, &Dat_vs, NULL);
-	glShaderSource(ID_fs, 1, &Dat_fs, NULL);
+oglShader::~oglShader()
+{
+	if (shaderID)
+		glDeleteShader(shaderID);
+	if(dat != nullptr)
+		delete[] dat;
+}
 
-	delete[] Dat_vs;
-	delete[] Dat_fs;
+bool oglShader::compile(string & msg)
+{
+	glCompileShader(shaderID);
 
-	glCompileShader(ID_vs);
-	glCompileShader(ID_fs);
-
-	bool res = true;
 	GLint result;
 	char logstr[4096] = { 0 };
 
-	glGetShaderiv(ID_vs, GL_COMPILE_STATUS, &result);
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &result);
 	if (!result)
 	{
-		//void glGetProgramInfoLog(GLuint object, int maxLen, int *len, char *log);  
-		glGetShaderInfoLog(ID_vs, sizeof(logstr), NULL, logstr);
-		glDeleteShader(ID_vs);
-		printf("ERROR on Vertex Shader Compiler:\n%s\n", logstr);
-		res = false;
-	}
-	glGetShaderiv(ID_fs, GL_COMPILE_STATUS, &result);
-	if (!result)
-	{
-		glGetShaderInfoLog(ID_fs, sizeof(logstr), NULL, logstr);
-		glDeleteShader(ID_fs);
-		printf("ERROR on Fragment Shader Compiler:\n%s\n", logstr);
-		res = false;
+		glGetShaderInfoLog(shaderID, sizeof(logstr), NULL, logstr);
+		msg.assign(logstr);
+		return false;
 	}
 
-	return res;
+	return true;
 }
 
-
-bool setShader(GLuint & ID_program, GLuint ID_vs, GLuint ID_fs)
+oglProgram::~oglProgram()
 {
-	ID_program = glCreateProgram();
+	if (programID)
+		glDeleteProgram(programID);
+}
 
-	glAttachShader(ID_program, ID_vs);
-	glAttachShader(ID_program, ID_fs);
+void oglProgram::init()
+{
+	programID = glCreateProgram();
+}
 
-	glLinkProgram(ID_program);
-	//glUseProgram(ID_program);
+void oglProgram::addShader(oglShader && shader)
+{
+	glAttachShader(programID, shader.shaderID);
+	shaders.push_back(forward<oglShader>(shader));
+}
 
-	bool res = true;
+bool oglProgram::link(string & msg)
+{
+	glLinkProgram(programID);
+
 	int result;
 	char logstr[4096] = { 0 };
 
-	glGetProgramiv(ID_program, GL_LINK_STATUS, &result);
+	glGetProgramiv(programID, GL_LINK_STATUS, &result);
 	if (!result)
 	{
-		glGetProgramInfoLog(ID_program, sizeof(logstr), NULL, logstr);
-		glDeleteProgram(ID_program);
-		printf("ERROR on Shader Program Linker:\n%s\n", logstr);
-		res = false;
+		glGetProgramInfoLog(programID, sizeof(logstr), NULL, logstr);
+		glDeleteProgram(programID);
+		msg.assign(logstr);
+		return false;
 	}
+	return true;
+}
 
-	return res;
+void oglProgram::use()
+{
+	glUseProgram(programID);
 }

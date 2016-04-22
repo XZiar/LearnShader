@@ -1,8 +1,14 @@
 #version 430
 
-in vec3 color;
+in perVert
+{
+	vec3 color;
+	vec3 norm;
+};
+
+out vec4 FragColor;
 
 void main() 
 {
-	gl_FragColor = vec4(color, 1.0);
+	FragColor = vec4(color, 1.0);
 }

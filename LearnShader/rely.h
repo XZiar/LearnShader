@@ -23,5 +23,6 @@ using glm::mat4;
 #include <cstdint>
 #include <locale>
 #include <cmath>
+#include <vector>
 #include <Windows.h>
 using namespace std;

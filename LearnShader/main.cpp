@@ -2,6 +2,7 @@
 #include "shaderUtil.h"
 #include "3DElement.h"
 
+static oglProgram glProg;
 static GLuint ID_vs, ID_fs, ID_sp;
 static GLuint ID_modelMat, ID_viewMat, ID_projMat;
 static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_idxVBO[4];
@@ -82,15 +83,34 @@ void init(void)
 
 	const GLubyte *version = glGetString(GL_VERSION);
 	printf("GL Version:%s\n", version);
+	glProg.init();
+	
+	string msg;
 
-	loadShaders("basic.vert", "basic.frag", ID_vs, ID_fs);
-	setShader(ID_sp, ID_vs, ID_fs);
+	{
+		oglShader vert(oglShader::ShaderType::Vertex, "basic.vert");
+		if (vert.compile(msg))
+			glProg.addShader(std::move(vert));
+		else
+			printf("ERROR on Vertex Shader Compiler:\n%s\n", msg.c_str());
+	}
+	{
+		oglShader frag(oglShader::ShaderType::Fragment, "basic.frag");
+		if (frag.compile(msg))
+			glProg.addShader(std::move(frag));
+		else
+			printf("ERROR on Fragment Shader Compiler:\n%s\n", msg.c_str());
+	}
+	{
+		if (!glProg.link(msg))
+			printf("ERROR on Program Linker:\n%s\n", msg.c_str());
+	}
+	glProg.use();
+	ID_sp = glProg.getPID();
 
 	ID_modelMat = glGetUniformLocation(ID_sp, "modelMat");
 	ID_viewMat = glGetUniformLocation(ID_sp, "viewMat");
 	ID_projMat = glGetUniformLocation(ID_sp, "projMat");
-
-	glUseProgram(ID_sp);
 
 	glGenVertexArrays(4, ID_VAO);
 	glGenBuffers(4, ID_vertVBO);
