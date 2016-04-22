@@ -61,6 +61,30 @@ public:
 	Normal(const Vertex &v);//πÈ“ªªØ
 };
 
+class Point
+{
+public:
+	Vertex pos;
+	Normal norm;
+	Coord2D tcoord;
+
+	Point() { };
+	Point(const Vertex &v, const Normal &n, const Coord2D &t) : pos(v), norm(n), tcoord(t) { };
+};
+
+class Triangle
+{
+public:
+	Vertex points[3];
+	Normal norms[3];
+	Coord2D tcoords[3];
+
+	Triangle();
+	Triangle(const Vertex &va, const Vertex &vb, const Vertex &vc);
+	Triangle(const Vertex &va, const Normal &na, const Vertex &vb, const Normal &nb, const Vertex &vc, const Normal &nc);
+	Triangle(const Vertex &va, const Normal &na, const Coord2D &ta, const Vertex &vb, const Normal &nb, const Coord2D &tb, const Vertex &vc, const Normal &nc, const Coord2D &tc);
+};
+
 class Camera
 {
 public:

@@ -217,6 +217,33 @@ Normal::Normal(const Vertex &v)//πÈ“ªªØ
 
 
 
+Triangle::Triangle()
+{
+}
+
+Triangle::Triangle(const Vertex &va, const Vertex &vb, const Vertex &vc)
+{
+	points[0] = va, points[1] = vb, points[2] = vc;
+	norms[0] = Normal(), norms[1] = Normal(), norms[2] = Normal();
+	tcoords[0] = Coord2D(), tcoords[1] = Coord2D(), tcoords[2] = Coord2D();
+}
+
+Triangle::Triangle(const Vertex &va, const Normal &na, const Vertex &vb, const Normal &nb, const Vertex &vc, const Normal &nc)
+{
+	points[0] = va, points[1] = vb, points[2] = vc;
+	norms[0] = na, norms[1] = nb, norms[2] = nc;
+	tcoords[0] = Coord2D(), tcoords[1] = Coord2D(), tcoords[2] = Coord2D();
+}
+
+Triangle::Triangle(const Vertex &va, const Normal &na, const Coord2D &ta, const Vertex &vb, const Normal &nb, const Coord2D &tb, const Vertex &vc, const Normal &nc, const Coord2D &tc)
+{
+	points[0] = va, points[1] = vb, points[2] = vc;
+	norms[0] = na, norms[1] = nb, norms[2] = nc;
+	tcoords[0] = ta, tcoords[1] = tb, tcoords[2] = tc;
+}
+
+
+
 Camera::Camera(GLint w, GLint h)
 {
 	width = w, height = h;

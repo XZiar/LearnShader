@@ -1,6 +1,7 @@
 #include "rely.h"
 #include "shaderUtil.h"
 #include "3DElement.h"
+#include "Model.h"
 
 static oglProgram glProg;
 
@@ -9,6 +10,7 @@ static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVB
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
 static Camera cam;
+static Model model;
 
 
 void CreateSphere(const float radius, const unsigned int rings, const unsigned int sectors, float *vertices, float *normals, float *texcoords, GLushort *indices)
@@ -118,37 +120,38 @@ void init(void)
 
 	glBindVertexArray(ID_VAO[0]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, ID_vertVBO[0]);
 	GLfloat DatVert[] =
 	{
 		0.0f, 1.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
 		-1.0f, -1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		
 		1.0f, -1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
 
 		2.0f, 2.0f, -2.0f,
+		0.0f, 0.0f, 1.0f,
+
 		1.0f, 0.0f, -2.0f,
+		0.0f, 1.0f, 0.0f,
+
 		3.0f, 0.0f, -2.0f,
+		1.0f, 0.0f, 0.0f,
 	};
+	glBindBuffer(GL_ARRAY_BUFFER, ID_vertVBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(DatVert), DatVert, GL_STATIC_DRAW);
+
 	glEnableVertexAttribArray(glProg.IDX_Vert_Pos);//vertex
-	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, ID_normVBO[0]);
-	GLfloat DatNorm[] =
-	{
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-
-		0.0f, 0.0f, 1.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-	};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(DatNorm), DatNorm, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(glProg.IDX_Vert_Norm);//normal
-	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 
 	setSphere();
+
+	model.loadOBJ(L"F:\\Project\\RayTrace\\objs\\0.obj", L"F:\\Project\\RayTrace\\objs\\0.mtl");
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -179,6 +182,8 @@ void display(void)
 
 	glBindVertexArray(ID_VAO[1]);
 	glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
+
+	model.draw();
 
 	glBindVertexArray(0);
 	glutSwapBuffers();
