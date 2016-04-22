@@ -16,27 +16,6 @@ inline void Coord_sph2car(float &angy, float &angz, const float dis, Vertex &v)
 	v.y = dis * cos(angy*PI / 180);
 }
 
-inline void Coord_sph2car2(float &angy, float &angz, const float dis, Vertex &v)
-{
-	bool fix = false;
-	if (angz >= 180)
-		angz = mod(angz, 180), angy = mod(360 - angy, 360), fix = true;
-	if (angy < 1e-6)
-		angy = 360;
-	v.z = dis * sin(angy*PI / 180) * cos(angz*PI / 180.0);
-	v.x = dis * sin(angy*PI / 180) * sin(angz*PI / 180);
-	if (fix && mod(angy, 180) < 1e-6)
-		v.z *= -1, v.x *= -1;
-	v.y = dis * cos(angy*PI / 180);
-}
-
-inline void Coord_car2sph(const Vertex &v, float &angy, float &angz, float &dis)
-{
-	dis = v.length();
-	angy = acos(v.y / dis) * 180 / PI;
-	angz = atan2(v.x, v.z) * 180 / PI;
-}
-
 
 
 
@@ -264,11 +243,9 @@ void Camera::yaw(const float angz)
 		oangz = atan2(n.x, n.z) * 180 / PI;
 	oangz -= angz;
 	Coord_sph2car(oangy, oangz, 1, n);
+
 	//rotate u(right)
-	oangy = acos(u.y / 1) * 180 / PI;
-	oangz = atan2(u.x, u.z) * 180 / PI;
-	oangz -= angz;
-	Coord_sph2car(oangy, oangz, 1, u);
+	u = (v * n) * -1;
 }
 
 void Camera::pitch(float angy)
@@ -285,15 +262,6 @@ void Camera::pitch(float angy)
 
 	//rotate v(up)
 	v = u * n;
-	/*oangy = acos(v.y / 1) * 180 / PI,
-	oangz = atan2(v.x, v.z) * 180 / PI;
-	oangy -= angy;
-	oangy = abs(oangy);
-	if (oangy > 90.0)
-	oangy = 90.0;
-
-	Coord_sph2car(oangy, oangz, 1, v);*/
-
 }
 
 void Camera::resize(GLint w, GLint h)

@@ -4,6 +4,7 @@ in perVert
 {
 	vec3 color;
 	vec3 norm;
+	vec2 texc;
 };
 
 out vec4 FragColor;

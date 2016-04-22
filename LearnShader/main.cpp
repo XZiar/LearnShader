@@ -3,9 +3,8 @@
 #include "3DElement.h"
 
 static oglProgram glProg;
-static GLuint ID_vs, ID_fs, ID_sp;
-static GLuint ID_modelMat, ID_viewMat, ID_projMat;
-static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_idxVBO[4];
+
+static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVBO[4], ID_idxVBO[4];
 
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
@@ -55,29 +54,33 @@ void setSphere()
 	float normals[80 * 80 * 3];
 	float texcoords[80 * 80 * 2];
 	GLushort indices[80 * 80 * 4];
-	CreateSphere(0.5f, 80, 80, vertices, normals, texcoords, indices);
+	CreateSphere(0.8f, 80, 80, vertices, normals, texcoords, indices);
 
 	glBindVertexArray(ID_VAO[1]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID_vertVBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);//vertex
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(glProg.IDX_Vert_Pos);//vertex
+	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID_normVBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);//normal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(glProg.IDX_Vert_Norm);//normal
+	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, ID_texcVBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(glProg.IDX_Vert_Texc);//texc
+	glVertexAttribPointer(glProg.IDX_Vert_Texc, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID_idxVBO[1]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 }
 
 void init(void)
 {
+	glewInit();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
@@ -106,15 +109,11 @@ void init(void)
 			printf("ERROR on Program Linker:\n%s\n", msg.c_str());
 	}
 	glProg.use();
-	ID_sp = glProg.getPID();
-
-	ID_modelMat = glGetUniformLocation(ID_sp, "modelMat");
-	ID_viewMat = glGetUniformLocation(ID_sp, "viewMat");
-	ID_projMat = glGetUniformLocation(ID_sp, "projMat");
 
 	glGenVertexArrays(4, ID_VAO);
 	glGenBuffers(4, ID_vertVBO);
 	glGenBuffers(4, ID_normVBO);
+	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
 
 	glBindVertexArray(ID_VAO[0]);
@@ -131,8 +130,8 @@ void init(void)
 		3.0f, 0.0f, -2.0f,
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(DatVert), DatVert, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);//vertex
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(glProg.IDX_Vert_Pos);//vertex
+	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID_normVBO[0]);
 	GLfloat DatNorm[] =
@@ -146,14 +145,22 @@ void init(void)
 		1.0f, 0.0f, 0.0f,
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(DatNorm), DatNorm, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);//normal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	glEnableVertexAttribArray(glProg.IDX_Vert_Norm);//normal
+	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	setSphere();
 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void onExit()
+{
+	glDeleteVertexArrays(4, ID_VAO);
+	glDeleteBuffers(4, ID_vertVBO);
+	glDeleteBuffers(4, ID_normVBO);
+	glDeleteBuffers(4, ID_texcVBO);
+	glDeleteBuffers(4, ID_idxVBO);
 }
 
 void display(void)
@@ -162,10 +169,10 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 viewMat = glm::lookAt(glm::vec3(cam.position), glm::vec3(cam.position + cam.n), glm::vec3(cam.v));
-	glUniformMatrix4fv(ID_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(glProg.IDX_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
 
 	mat4 modelMat;
-	glUniformMatrix4fv(ID_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
+	glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
 
 	glBindVertexArray(ID_VAO[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -182,14 +189,24 @@ void reshape(int w, int h)
 	cam.resize(w & 0x8fc0, h & 0x8fc0);
 	glViewport((w & 0x3f) / 2, (h & 0x3f) / 2, cam.width, cam.height);
 
+	//mat4 projMat = glm::frustum(-RProjZ, +RProjZ, -Aspect*RProjZ, +Aspect*RProjZ, 1.0, 32768.0);
+	
 	mat4 projMat = glm::perspective(cam.fovy, cam.aspect, cam.zNear, cam.zFar);
-	glUniformMatrix4fv(ID_projMat, 1, GL_FALSE, glm::value_ptr(projMat));
+	glUniformMatrix4fv(glProg.IDX_projMat, 1, GL_FALSE, glm::value_ptr(projMat));
 }
 
-void keyboard(unsigned char key, int x, int y)
+void onKeyboard(int key, int x, int y)
 {
 	switch (key)
 	{
+	case GLUT_KEY_LEFT:
+		cam.yaw(-3); break;
+	case GLUT_KEY_RIGHT:
+		cam.yaw(3); break;
+	case GLUT_KEY_UP:
+		cam.pitch(3); break;
+	case GLUT_KEY_DOWN:
+		cam.pitch(-3); break;
 	default:
 		break;
 	}
@@ -242,16 +259,19 @@ int main(int argc, char** argv)
 	glutInitWindowSize(cam.width, cam.height);
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow(argv[0]);
-	glewInit();
+	
 	init();
+
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 
-	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(onKeyboard);
 	glutMouseFunc(onMouse);
 	glutMotionFunc(onMouse);
 	glutMouseWheelFunc(onWheel);
 
 	glutMainLoop();
+
+	onExit();
 	return 0;
 }

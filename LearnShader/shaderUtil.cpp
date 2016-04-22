@@ -30,6 +30,8 @@ oglShader::oglShader(ShaderType type, const char * fpath) : shaderType(type)
 		stype = 0; break;
 	case ShaderType::TessEval:
 		stype = 0; break;
+	default:
+		stype = 0;
 	}
 	shaderID = glCreateShader(stype);
 	glShaderSource(shaderID, 1, &dat, NULL);
@@ -75,7 +77,6 @@ bool oglShader::compile(string & msg)
 		msg.assign(logstr);
 		return false;
 	}
-
 	return true;
 }
 
