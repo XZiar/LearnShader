@@ -33,7 +33,8 @@ public:
 	const static GLuint
 		IDX_projMat = 0,
 		IDX_viewMat = 1,
-		IDX_modelMat = 2;
+		IDX_modelMat = 2,
+		IDX_normMat = 3;
 	const static GLuint
 		IDX_Vert_Pos = 0,
 		IDX_Vert_Norm = 1,

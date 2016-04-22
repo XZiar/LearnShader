@@ -8,6 +8,7 @@
 #include <GL/glm/gtc/matrix_transform.hpp>
 #include <GL/glm/gtc/type_ptr.hpp>
 using glm::mat4;
+using glm::vec3;
 
 #define FREEGLUT_STATIC
 #include <GL/freeglut.h>//Free GLUT Header
@@ -25,4 +26,10 @@ using glm::mat4;
 #include <cmath>
 #include <vector>
 #include <Windows.h>
-using namespace std;
+
+using std::move;
+using std::forward;
+using std::vector;
+using std::string;
+using std::wstring;
+//using namespace std;

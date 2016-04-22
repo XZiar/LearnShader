@@ -171,20 +171,28 @@ void display(void)
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mat4 viewMat = glm::lookAt(glm::vec3(cam.position), glm::vec3(cam.position + cam.n), glm::vec3(cam.v));
+	mat4 viewMat = glm::lookAt(vec3(cam.position), vec3(cam.position + cam.n), vec3(cam.v));
 	glUniformMatrix4fv(glProg.IDX_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
-
 	mat4 modelMat;
 	glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
+	mat4 normMat;
+	glUniformMatrix4fv(glProg.IDX_normMat, 1, GL_FALSE, glm::value_ptr(normMat));
+	
+	{
+		mat4 tMat = glm::translate(modelMat, vec3(0.0f, -1.0f, 0.0f));
+		glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(tMat));
 
-	glBindVertexArray(ID_VAO[0]);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(ID_VAO[1]);
+		glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
+	}
+	{
+		mat4 rMat = glm::rotate(modelMat, -float(M_PI_2), vec3(1.0f, 0.0f, 0.0f));
+		mat4 sMat = glm::scale(rMat, vec3(0.04f, 0.04f, 0.04f));
+		glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(sMat));
+		glUniformMatrix4fv(glProg.IDX_normMat, 1, GL_FALSE, glm::value_ptr(rMat));
 
-	glBindVertexArray(ID_VAO[1]);
-	glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
-
-	model.draw();
-
+		model.draw();
+	}
 	glBindVertexArray(0);
 	glutSwapBuffers();
 }

@@ -34,7 +34,7 @@ public:
 	Vertex(const float ix, const float iy, const float iz, const float ia = 0) :x(ix), y(iy), z(iz), w(ia) { };
 	operator float*() { return &x; };
 	operator __m128() const { return dat; };
-	operator glm::tvec3<float, glm::highp>() const { return glm::vec3(x, y, z); };
+	operator glm::tvec3<float, glm::highp>() const { return vec3(x, y, z); };
 
 	float length() const;
 	float length_sqr() const;

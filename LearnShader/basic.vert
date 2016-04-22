@@ -3,6 +3,7 @@
 layout(location = 0) uniform mat4 projMat;
 layout(location = 1) uniform mat4 viewMat;
 layout(location = 2) uniform mat4 modelMat;
+layout(location = 3) uniform mat4 normMat;
 
 layout(location = 0) in vec3 vertPos;
 layout(location = 1) in vec3 vertNorm;
@@ -19,6 +20,7 @@ out perVert
 void main() 
 {
 	gl_Position = projMat * viewMat * modelMat * vec4(vertPos, 1.0f);
-	color = vertNorm;
-	norm = vertNorm;
+	vec4 tmp = normalize(normMat * vec4(vertNorm, 1.0f));
+	norm = tmp.rgb;
+	color = norm;
 }
