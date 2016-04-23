@@ -16,7 +16,19 @@ inline void Coord_sph2car(float &angy, float &angz, const float dis, Vertex &v)
 	v.y = dis * cos(angy*PI / 180);
 }
 
-
+inline void Coord_sph2car2(float &angy, float &angz, const float dis, Vertex &v)
+{
+	bool fix = false;
+	if (angz >= 180)
+		angz = mod(angz, 180), angy = mod(360 - angy, 360), fix = true;
+	if (angy < 1e-6)
+		angy = 360;
+	v.z = dis * sin(angy*PI / 180) * cos(angz*PI / 180.0);
+	v.x = dis * sin(angy*PI / 180) * sin(angz*PI / 180);
+	if (fix && mod(angy, 180) < 1e-6)
+		v.z *= -1, v.x *= -1;
+	v.y = dis * cos(angy*PI / 180);
+}
 
 
 
@@ -240,6 +252,74 @@ Triangle::Triangle(const Vertex &va, const Normal &na, const Coord2D &ta, const 
 	points[0] = va, points[1] = vb, points[2] = vc;
 	norms[0] = na, norms[1] = nb, norms[2] = nc;
 	tcoords[0] = ta, tcoords[1] = tb, tcoords[2] = tc;
+}
+
+
+
+Light::Light(const Type type)
+{
+	this->type = (int)type;
+	bLight = true;
+	rangy = 90, rangz = 0, rdis = 16;
+	move(0, 0, 0);
+	SetProperty((int)Property::Ambient, 0.05f, 0.05f, 0.05f);
+	SetProperty((int)Property::Diffuse | (int)Property::Specular, 1.0f, 1.0f, 1.0f);
+	SetProperty((int)Property::Atten, 1.0f, 0.0f, 0.0f);
+	switch (type)
+	{
+	case Type::Parallel:
+		position.alpha = 0.0f;
+		break;
+	case Type::Point:
+		position.alpha = 1.0f;
+		break;
+	case Type::Spot:
+		position.alpha = 1.0f;
+		break;
+	}
+}
+
+bool Light::turn()
+{
+	return bLight = !bLight;
+}
+
+void Light::move(const float dangy, const float dangz, const float ddis)
+{
+	rdis += ddis;
+	if (rdis < 2)
+		rdis = 2;
+	else if (rdis > 64)
+		rdis = 64;
+	angy = rangy = mod(360 + rangy + dangy, 360);
+	angz = rangz = mod(360 + rangz + dangz, 360);
+	dis = rdis;
+
+	Coord_sph2car2(angy, angz, dis, position);
+}
+
+void Light::SetProperty(const int prop, float r, float g, float b, float a)
+{
+	Vertex set(r, g, b, a);
+	if (prop & int(Property::Ambient))
+		ambient = set;
+	if (prop & int(Property::Diffuse))
+		diffuse = set;
+	if (prop & int(Property::Specular))
+		specular = set;
+	if (prop & int(Property::Atten))
+		attenuation = set;
+	if (prop & int(Property::Position))
+		position = set;
+}
+
+void Light::SetLumi(const float lum)
+{
+	float ext = lum / attenuation.alpha;
+	attenuation.alpha = lum;
+	ambient *= ext;
+	diffuse *= ext;
+	specular *= ext;
 }
 
 

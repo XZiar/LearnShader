@@ -85,6 +85,44 @@ public:
 	Triangle(const Vertex &va, const Normal &na, const Coord2D &ta, const Vertex &vb, const Normal &nb, const Coord2D &tb, const Vertex &vc, const Normal &nc, const Coord2D &tc);
 };
 
+class Light
+{
+public:
+	enum class Type
+	{
+		Parallel, Point, Spot
+	};
+	enum class Property
+	{
+		Position = 0x1,
+		Ambient = 0x2,
+		Diffuse = 0x4,
+		Specular = 0x8,
+		Atten = 0x10
+	};
+public:
+	Vertex position,
+		ambient,
+		diffuse,
+		specular,
+		attenuation;
+	float coang, exponent;//for spot light
+	int type;
+	bool bLight;
+	float rangy, rangz, rdis,
+		angy, angz, dis;
+
+	Light(const Type type);
+	bool turn();
+	void move(const float dangy, const float dangz, const float ddis);
+	void SetProperty(const int prop, const float r, const float g, const float b, const float a = 1.0f);
+	void SetProperty(const Property prop, const float r, const float g, const float b, const float a = 1.0f)
+	{
+		SetProperty(int(prop), r, g, b, a);
+	}
+	void SetLumi(const float lum);
+};
+
 class Camera
 {
 public:

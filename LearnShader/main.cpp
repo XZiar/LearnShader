@@ -10,6 +10,7 @@ static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVB
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
 static Camera cam;
+static Light light(Light::Type::Parallel);
 static Model model;
 
 
@@ -48,6 +49,40 @@ void CreateSphere(const float radius, const unsigned int rings, const unsigned i
 			*i++ = (r + 1) * sectors + (s + 1);
 			*i++ = (r + 1) * sectors + s;
 		}
+}
+
+void setTriangles()
+{
+	glBindVertexArray(ID_VAO[0]);
+
+	GLfloat DatVert[] =
+	{
+		0.0f, 1.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		-1.0f, -1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+
+		1.0f, -1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+
+		2.0f, 2.0f, -2.0f,
+		0.0f, 0.0f, 1.0f,
+
+		1.0f, 0.0f, -2.0f,
+		0.0f, 1.0f, 0.0f,
+
+		3.0f, 0.0f, -2.0f,
+		1.0f, 0.0f, 0.0f,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, ID_vertVBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DatVert), DatVert, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(glProg.IDX_Vert_Pos);//vertex
+	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
+
+	glEnableVertexAttribArray(glProg.IDX_Vert_Norm);//normal
+	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 }
 
 void setSphere()
@@ -93,14 +128,14 @@ void init(void)
 	string msg;
 
 	{
-		oglShader vert(oglShader::ShaderType::Vertex, "basic.vert");
+		oglShader vert(oglShader::Type::Vertex, "basic.vert");
 		if (vert.compile(msg))
 			glProg.addShader(std::move(vert));
 		else
 			printf("ERROR on Vertex Shader Compiler:\n%s\n", msg.c_str());
 	}
 	{
-		oglShader frag(oglShader::ShaderType::Fragment, "basic.frag");
+		oglShader frag(oglShader::Type::Fragment, "basic.frag");
 		if (frag.compile(msg))
 			glProg.addShader(std::move(frag));
 		else
@@ -118,43 +153,20 @@ void init(void)
 	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
 
-	glBindVertexArray(ID_VAO[0]);
-
-	GLfloat DatVert[] =
-	{
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-
-		-1.0f, -1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		
-		1.0f, -1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-
-		2.0f, 2.0f, -2.0f,
-		0.0f, 0.0f, 1.0f,
-
-		1.0f, 0.0f, -2.0f,
-		0.0f, 1.0f, 0.0f,
-
-		3.0f, 0.0f, -2.0f,
-		1.0f, 0.0f, 0.0f,
-	};
-	glBindBuffer(GL_ARRAY_BUFFER, ID_vertVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(DatVert), DatVert, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(glProg.IDX_Vert_Pos);//vertex
-	glVertexAttribPointer(glProg.IDX_Vert_Pos, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
-
-	glEnableVertexAttribArray(glProg.IDX_Vert_Norm);//normal
-	glVertexAttribPointer(glProg.IDX_Vert_Norm, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-
+	setTriangles();
 	setSphere();
 
 	model.loadOBJ(L"F:\\Project\\RayTrace\\objs\\0.obj", L"F:\\Project\\RayTrace\\objs\\0.mtl");
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	//set light
+	//light.SetProperty(Light::Property::Diffuse, 0.5f, 0.5f, 0.5f);
+	GLuint idx = glGetUniformBlockIndex(glProg.programID, "lightBlock");
+	glBindBuffer(GL_UNIFORM_BUFFER, ID_texcVBO[0]);
+	glBufferData(GL_UNIFORM_BUFFER, 96, &light, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 4, ID_texcVBO[0]);
+	glUniformBlockBinding(glProg.programID, idx, 4);
 }
 
 void onExit()

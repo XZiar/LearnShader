@@ -1,7 +1,7 @@
 #include "rely.h"
 #include "shaderUtil.h"
 
-oglShader::oglShader(ShaderType type, const char * fpath) : shaderType(type)
+oglShader::oglShader(Type type, const char * fpath) : shaderType(type)
 {
 	FILE * fp;
 	if (fopen_s(&fp, fpath, "rb") != 0)
@@ -20,15 +20,15 @@ oglShader::oglShader(ShaderType type, const char * fpath) : shaderType(type)
 	GLenum stype;
 	switch (type)
 	{
-	case ShaderType::Vertex:
+	case Type::Vertex:
 		stype = GL_VERTEX_SHADER; break;
-	case ShaderType::Fragment:
+	case Type::Fragment:
 		stype = GL_FRAGMENT_SHADER; break;
-	case ShaderType::Geometry:
+	case Type::Geometry:
 		stype = GL_GEOMETRY_SHADER; break;
-	case ShaderType::TessCtrl:
+	case Type::TessCtrl:
 		stype = 0; break;
-	case ShaderType::TessEval:
+	case Type::TessEval:
 		stype = 0; break;
 	default:
 		stype = 0;

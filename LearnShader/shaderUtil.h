@@ -5,17 +5,17 @@
 class oglShader
 {
 public:
-	enum class ShaderType
+	enum class Type
 	{
 		Vertex, Geometry, Fragment, TessCtrl, TessEval, Compute
 	};
 private:
-	ShaderType shaderType;
+	Type shaderType;
 public:
 	GLuint shaderID = 0;
 	char * dat = nullptr;
 
-	oglShader(ShaderType, const char *);
+	oglShader(Type, const char *);
 	oglShader(const oglShader &) = delete;
 	oglShader & operator = (const oglShader &) = delete;
 	oglShader(oglShader &&);
