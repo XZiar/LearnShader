@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rely.h"
+#include "3DElement.h"
 
 class oglShader
 {
@@ -28,7 +29,10 @@ public:
 class oglProgram
 {
 private:
+	GLuint programID = 0;
 	vector<oglShader> shaders;
+	mat4 matrix_Proj, matrix_View, matrix_Model, matrix_Norm;
+	GLuint ID_lgtVBO;
 public:
 	const static GLuint
 		IDX_projMat = 0,
@@ -45,8 +49,6 @@ public:
 		IDX_Uni_Light = 0,
 		IDX_Uni_Material = 1;
 
-	GLuint programID = 0;
-
 	~oglProgram();
 	
 	GLuint getPID() { return programID; };
@@ -56,4 +58,8 @@ public:
 	bool link(string & msg);
 	void use();
 
+	void setProject(const Camera &, const int wdWidth, const int wdHeight);
+	void setCamera(const Camera &);
+	void setLight(const Light &);
+	void drawObject(const function<void(void)> &, const Vertex & vTrans, const Vertex & vRotate, const float fScale);
 };

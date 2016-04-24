@@ -32,7 +32,7 @@ public:
 	Vertex();
 	Vertex(const __m128 &idat);
 	Vertex(const float ix, const float iy, const float iz, const float ia = 0) :x(ix), y(iy), z(iz), w(ia) { };
-	operator float*() { return &x; };
+	operator float*() const { return (float *)&x; };
 	operator __m128() const { return dat; };
 	operator glm::tvec3<float, glm::highp>() const { return vec3(x, y, z); };
 

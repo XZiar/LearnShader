@@ -24,6 +24,7 @@ using glm::vec3;
 #include <cstdint>
 #include <locale>
 #include <cmath>
+#include <functional>
 #include <vector>
 #include <Windows.h>
 
@@ -32,4 +33,5 @@ using std::forward;
 using std::vector;
 using std::string;
 using std::wstring;
+using std::function;
 //using namespace std;

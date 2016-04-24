@@ -41,13 +41,13 @@ void main()
 	vec4 tmp = normMat * vec4(vertNorm, 1.0f);
 	norm = tmp.rgb;
 
-	color = lights.diffuse.rgb;
+	vec3 baseColor = vec3(0.644f, 0.644f, 0.644f);
+	baseColor = norm;
+
+	color = baseColor * lights.ambient;
 
 	vec3 lightRay = normalize(lights.position - vec4(vertPos, 1.0f)).rgb;
-
 	vec3 p2l = normalize(lights.position).rgb;
-	vec3 baseColor = vec3(0.644f, 0.644f, 0.644f);
-	color = baseColor * lights.ambient;
 	color += baseColor * lights.diffuse * max(dot(lightRay, p2l), 0.0f);
 	/*
 	** blinn-phong model
@@ -56,4 +56,5 @@ void main()
 	vec3 h = normalize(p2l - eyeRay);
 	float nn = max(dot(lightRay, h), 0.0f);
 	color += baseColor * lights.specular * nn * pow(nn, 10);
+
 }

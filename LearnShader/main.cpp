@@ -6,7 +6,7 @@
 static oglProgram glProg;
 
 static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVBO[4], ID_idxVBO[4];
-static GLuint ID_lgtVBO;
+//static GLuint ID_lgtVBO;
 
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
@@ -153,7 +153,7 @@ void init(void)
 	glGenBuffers(4, ID_normVBO);
 	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
-	glGenBuffers(1, &ID_lgtVBO);
+	
 
 	setTriangles();
 	setSphere();
@@ -161,12 +161,6 @@ void init(void)
 	model.loadOBJ(L"F:\\Project\\RayTrace\\objs\\0.obj", L"F:\\Project\\RayTrace\\objs\\0.mtl");
 
 	glBindVertexArray(0);
-
-	//set light
-	GLuint idx = glGetUniformBlockIndex(glProg.programID, "lightBlock");
-	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
-	glBindBufferBase(GL_UNIFORM_BUFFER, glProg.IDX_Uni_Light, ID_lgtVBO);
-	glUniformBlockBinding(glProg.programID, idx, glProg.IDX_Uni_Light);
 }
 
 void onExit()
@@ -176,7 +170,7 @@ void onExit()
 	glDeleteBuffers(4, ID_normVBO);
 	glDeleteBuffers(4, ID_texcVBO);
 	glDeleteBuffers(4, ID_idxVBO);
-	glDeleteBuffers(1, &ID_lgtVBO);
+	//glDeleteBuffers(1, &ID_lgtVBO);
 }
 
 void display(void)
@@ -184,33 +178,22 @@ void display(void)
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
-	glBufferData(GL_UNIFORM_BUFFER, 96, &light, GL_DYNAMIC_DRAW);
+	glProg.setLight(light);
 
-	glUniform3fv(glProg.IDX_camPos, 1, cam.position);
+	//set camera
+	glProg.setCamera(cam);
 
-	mat4 viewMat = glm::lookAt(vec3(cam.position), vec3(cam.position + cam.n), vec3(cam.v));
-	glUniformMatrix4fv(glProg.IDX_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
-	mat4 modelMat;
-	glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(modelMat));
-	mat4 normMat;
-	glUniformMatrix4fv(glProg.IDX_normMat, 1, GL_FALSE, glm::value_ptr(normMat));
-	
+	glProg.drawObject([&]()
 	{
-		mat4 tMat = glm::translate(modelMat, vec3(0.0f, -1.0f, 0.0f));
-		glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(tMat));
-
 		glBindVertexArray(ID_VAO[1]);
 		glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
-	}
-	{
-		mat4 rMat = glm::rotate(modelMat, -float(M_PI_2), vec3(1.0f, 0.0f, 0.0f));
-		mat4 sMat = glm::scale(rMat, vec3(0.04f, 0.04f, 0.04f));
-		glUniformMatrix4fv(glProg.IDX_modelMat, 1, GL_FALSE, glm::value_ptr(sMat));
-		glUniformMatrix4fv(glProg.IDX_normMat, 1, GL_FALSE, glm::value_ptr(rMat));
+	}, Vertex(0.0f, -1.0f, 0.0f), Vertex(), 1.0f);
 
+	glProg.drawObject([&]()
+	{
 		model.draw();
-	}
+	}, Vertex(), Vertex(-0.5f, 0.0f, 0.0f), 0.04f);
+
 	glBindVertexArray(0);
 	glutSwapBuffers();
 }
@@ -218,12 +201,8 @@ void display(void)
 void reshape(int w, int h)
 {
 	cam.resize(w & 0x8fc0, h & 0x8fc0);
-	glViewport((w & 0x3f) / 2, (h & 0x3f) / 2, cam.width, cam.height);
-
-	//mat4 projMat = glm::frustum(-RProjZ, +RProjZ, -Aspect*RProjZ, +Aspect*RProjZ, 1.0, 32768.0);
 	
-	mat4 projMat = glm::perspective(cam.fovy, cam.aspect, cam.zNear, cam.zFar);
-	glUniformMatrix4fv(glProg.IDX_projMat, 1, GL_FALSE, glm::value_ptr(projMat));
+	glProg.setProject(cam, w, h);
 }
 
 void onKeyboard(int key, int x, int y)
