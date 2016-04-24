@@ -180,7 +180,6 @@ void display(void)
 
 	glProg.setLight(light);
 
-	//set camera
 	glProg.setCamera(cam);
 
 	glProg.drawObject([&]()

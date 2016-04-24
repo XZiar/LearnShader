@@ -32,7 +32,7 @@ private:
 	GLuint programID = 0;
 	vector<oglShader> shaders;
 	mat4 matrix_Proj, matrix_View, matrix_Model, matrix_Norm;
-	GLuint ID_lgtVBO;
+	GLuint ID_lgtVBO, ID_mtVBO;
 public:
 	const static GLuint
 		IDX_projMat = 0,

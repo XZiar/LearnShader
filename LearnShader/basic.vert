@@ -1,7 +1,5 @@
 #version 430
 
-//struct LightInfo
-
 layout(location = 0) uniform mat4 projMat;
 layout(location = 1) uniform mat4 viewMat;
 layout(location = 2) uniform mat4 modelMat;
@@ -49,9 +47,8 @@ void main()
 	vec3 lightRay = normalize(lights.position - vec4(vertPos, 1.0f)).rgb;
 	vec3 p2l = normalize(lights.position).rgb;
 	color += baseColor * lights.diffuse * max(dot(lightRay, p2l), 0.0f);
-	/*
-	** blinn-phong model
-	*/
+
+	/* blinn-phong model */
 	vec3 eyeRay = normalize(gl_Position.rgb - camPos);
 	vec3 h = normalize(p2l - eyeRay);
 	float nn = max(dot(lightRay, h), 0.0f);

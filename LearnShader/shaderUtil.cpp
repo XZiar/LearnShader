@@ -89,6 +89,8 @@ oglProgram::~oglProgram()
 void oglProgram::init()
 {
 	programID = glCreateProgram();
+	glGenBuffers(1, &ID_lgtVBO);
+	glGenBuffers(1, &ID_mtVBO);
 }
 
 void oglProgram::addShader(oglShader && shader)
@@ -118,13 +120,21 @@ bool oglProgram::link(string & msg)
 void oglProgram::use()
 {
 	glUseProgram(programID);
+	GLuint idx;
 
 	//set light
-	glGenBuffers(1, &ID_lgtVBO);
-	GLuint idx = glGetUniformBlockIndex(programID, "lightBlock");
+	idx = glGetUniformBlockIndex(programID, "lightBlock");
 	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
 	glBindBufferBase(GL_UNIFORM_BUFFER, IDX_Uni_Light, ID_lgtVBO);
 	glUniformBlockBinding(programID, idx, IDX_Uni_Light);
+	glBufferData(GL_UNIFORM_BUFFER, 96, NULL, GL_DYNAMIC_DRAW);
+
+	//set material
+	idx = glGetUniformBlockIndex(programID, "materialBlock");
+	glBindBuffer(GL_UNIFORM_BUFFER, ID_mtVBO);
+	glBindBufferBase(GL_UNIFORM_BUFFER, IDX_Uni_Material, ID_mtVBO);
+	glUniformBlockBinding(programID, idx, IDX_Uni_Material);
+	glBufferData(GL_UNIFORM_BUFFER, 80, NULL, GL_DYNAMIC_DRAW);
 }
 
 void oglProgram::setProject(const Camera & cam, const int wdWidth, const int wdHeight)
@@ -146,7 +156,7 @@ void oglProgram::setCamera(const Camera & cam)
 void oglProgram::setLight(const Light & light)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
-	glBufferData(GL_UNIFORM_BUFFER, 96, &light, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 96, &light);
 }
 
 void oglProgram::drawObject(const function<void(void)>& draw, const Vertex & vTrans, const Vertex & vRotate, const float fScale)
