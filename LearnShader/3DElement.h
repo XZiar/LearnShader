@@ -90,7 +90,7 @@ class Light
 public:
 	enum class Type
 	{
-		Parallel, Point, Spot
+		Parallel = 0x1, Point = 0x2, Spot = 0x3
 	};
 	enum class Property
 	{

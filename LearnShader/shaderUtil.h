@@ -34,12 +34,16 @@ public:
 		IDX_projMat = 0,
 		IDX_viewMat = 1,
 		IDX_modelMat = 2,
-		IDX_normMat = 3;
+		IDX_normMat = 3,
+		IDX_camPos = 4;
 	const static GLuint
 		IDX_Vert_Pos = 0,
 		IDX_Vert_Norm = 1,
 		IDX_Vert_Color = 2,
 		IDX_Vert_Texc = 3;
+	const static GLuint
+		IDX_Uni_Light = 0,
+		IDX_Uni_Material = 1;
 
 	GLuint programID = 0;
 

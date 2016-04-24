@@ -6,6 +6,7 @@
 static oglProgram glProg;
 
 static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVBO[4], ID_idxVBO[4];
+static GLuint ID_lgtVBO;
 
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
@@ -152,6 +153,7 @@ void init(void)
 	glGenBuffers(4, ID_normVBO);
 	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
+	glGenBuffers(1, &ID_lgtVBO);
 
 	setTriangles();
 	setSphere();
@@ -161,12 +163,10 @@ void init(void)
 	glBindVertexArray(0);
 
 	//set light
-	//light.SetProperty(Light::Property::Diffuse, 0.5f, 0.5f, 0.5f);
 	GLuint idx = glGetUniformBlockIndex(glProg.programID, "lightBlock");
-	glBindBuffer(GL_UNIFORM_BUFFER, ID_texcVBO[0]);
-	glBufferData(GL_UNIFORM_BUFFER, 96, &light, GL_DYNAMIC_DRAW);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 4, ID_texcVBO[0]);
-	glUniformBlockBinding(glProg.programID, idx, 4);
+	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
+	glBindBufferBase(GL_UNIFORM_BUFFER, glProg.IDX_Uni_Light, ID_lgtVBO);
+	glUniformBlockBinding(glProg.programID, idx, glProg.IDX_Uni_Light);
 }
 
 void onExit()
@@ -176,12 +176,18 @@ void onExit()
 	glDeleteBuffers(4, ID_normVBO);
 	glDeleteBuffers(4, ID_texcVBO);
 	glDeleteBuffers(4, ID_idxVBO);
+	glDeleteBuffers(1, &ID_lgtVBO);
 }
 
 void display(void)
 {
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
+	glBufferData(GL_UNIFORM_BUFFER, 96, &light, GL_DYNAMIC_DRAW);
+
+	glUniform3fv(glProg.IDX_camPos, 1, cam.position);
 
 	mat4 viewMat = glm::lookAt(vec3(cam.position), vec3(cam.position + cam.n), vec3(cam.v));
 	glUniformMatrix4fv(glProg.IDX_viewMat, 1, GL_FALSE, glm::value_ptr(viewMat));
@@ -232,6 +238,39 @@ void onKeyboard(int key, int x, int y)
 		cam.pitch(3); break;
 	case GLUT_KEY_DOWN:
 		cam.pitch(-3); break;
+	default:
+		break;
+	}
+	glutPostRedisplay();
+}
+
+void onKeyboard(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	//move light
+	case '2':
+	case '4':
+	case '6':
+	case '8':
+	case 43://+
+	case 45://-
+		switch (key)
+		{
+		case '2':
+			light.move(3, 0, 0); break;
+		case '4':
+			light.move(0, -3, 0); break;
+		case '6':
+			light.move(0, 3, 0); break;
+		case '8':
+			light.move(-3, 0, 0); break;
+		case 43://+
+			light.move(0, 0, 1); break;
+		case 45://-
+			light.move(0, 0, -1); break;
+		}
+		break;
 	default:
 		break;
 	}
@@ -291,6 +330,7 @@ int main(int argc, char** argv)
 	glutReshapeFunc(reshape);
 
 	glutSpecialFunc(onKeyboard);
+	glutKeyboardFunc(onKeyboard);
 	glutMouseFunc(onMouse);
 	glutMotionFunc(onMouse);
 	glutMouseWheelFunc(onWheel);

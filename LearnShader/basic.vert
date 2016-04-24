@@ -8,7 +8,7 @@ layout(location = 2) uniform mat4 modelMat;
 layout(location = 3) uniform mat4 normMat;
 layout(location = 4) uniform vec3 camPos;
 
-layout(std140, binding = 4) uniform lightBlock
+layout(std140) uniform lightBlock
 {
 	vec4 position;
 	vec4 ambient, diffuse, specular, atten;
@@ -16,6 +16,12 @@ layout(std140, binding = 4) uniform lightBlock
 	int type;
 	bool isOpen;
 } lights;
+
+layout(std140) uniform materialBlock
+{
+	vec4 ambient, diffuse, specular, emission;
+	float shiness, reflect, refract, rfr;
+} material;
 
 layout(location = 0) in vec3 vertPos;
 layout(location = 1) in vec3 vertNorm;
@@ -38,6 +44,16 @@ void main()
 	color = lights.diffuse.rgb;
 
 	vec3 lightRay = normalize(lights.position - vec4(vertPos, 1.0f)).rgb;
+
 	vec3 p2l = normalize(lights.position).rgb;
-	color = vec3(0.644f, 0.644f, 0.644f) * max(dot(lightRay,p2l), 0.0f);
+	vec3 baseColor = vec3(0.644f, 0.644f, 0.644f);
+	color = baseColor * lights.ambient;
+	color += baseColor * lights.diffuse * max(dot(lightRay, p2l), 0.0f);
+	/*
+	** blinn-phong model
+	*/
+	vec3 eyeRay = normalize(gl_Position.rgb - camPos);
+	vec3 h = normalize(p2l - eyeRay);
+	float nn = max(dot(lightRay, h), 0.0f);
+	color += baseColor * lights.specular * nn * pow(nn, 10);
 }
