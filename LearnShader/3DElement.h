@@ -100,7 +100,7 @@ public:
 		Specular = 0x8,
 		Atten = 0x10
 	};
-private:
+public:
 	Vertex position,
 		ambient,
 		diffuse,

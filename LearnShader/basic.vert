@@ -12,7 +12,7 @@ layout(std140) uniform lightBlock
 	vec4 ambient, diffuse, specular, atten;
 	float coang, exponent;
 	int type;
-	bool isOpen;
+	int isOpen;
 } lights;
 
 layout(std140) uniform materialBlock
@@ -29,26 +29,18 @@ layout(location = 3) in vec2 vertTexc;
 out perVert
 {
 	vec3 cAmbient,cDiffuse,cSpecular;
+	vec3 pos;
 	vec3 norm;
 	vec2 texc;
 };
 
 void main() 
 {
-	gl_Position = projMat * viewMat * modelMat * vec4(vertPos, 1.0f);
-	vec4 tmp = normMat * vec4(vertNorm, 1.0f);
-	norm = tmp.rgb;
+	pos = (modelMat * vec4(vertPos, 1.0f)).rgb;
+	gl_Position = projMat * viewMat * vec4(pos, 1.0f);
+	norm = (normMat * vec4(vertNorm, 1.0f)).rgb;
 
-	cAmbient = (material.ambient * lights.ambient).rgb;
-
-	vec3 lightRay = normalize(lights.position - vec4(vertPos, 1.0f)).rgb;
-	vec3 p2l = normalize(lights.position).rgb;
-	cDiffuse = (material.diffuse * lights.diffuse).rgb * max(dot(lightRay, p2l), 0.0f);
-
-	/* blinn-phong model */
-	vec3 eyeRay = normalize(gl_Position.rgb - camPos);
-	vec3 h = normalize(p2l - eyeRay);
-	float nn = max(dot(lightRay, h), 0.0f);
-	cSpecular = (material.specular * lights.specular).rgb * nn * pow(nn, 10);
-
+	cAmbient = (material.ambient * lights.ambient + material.emission).rgb;
+	cDiffuse = (material.diffuse * lights.diffuse).rgb;
+	cSpecular = (material.specular * lights.specular).rgb;
 }

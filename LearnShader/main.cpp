@@ -154,10 +154,8 @@ void init(void)
 	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
 	
-
 	setTriangles();
 	setSphere();
-
 	model.loadOBJ(L"F:\\Project\\RayTrace\\objs\\0.obj", L"F:\\Project\\RayTrace\\objs\\0.mtl");
 
 	glBindVertexArray(0);
@@ -181,6 +179,16 @@ void display(void)
 	glProg.setLight(light);
 
 	glProg.setCamera(cam);
+
+	//draw light
+	glProg.drawObject([&]()
+	{
+		Material mt;
+		mt.SetMtl(Material::Property::Emission, 0.8f, 0.8f, 0.2f);
+		glProg.setMaterial(mt);
+		glBindVertexArray(ID_VAO[1]);
+		glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
+	}, light.position, Vertex(), 0.1f);
 
 	glProg.drawObject([&]()
 	{
