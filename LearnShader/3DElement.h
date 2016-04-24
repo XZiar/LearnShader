@@ -88,11 +88,11 @@ public:
 class Light
 {
 public:
-	enum class Type
+	enum class Type : uint8_t
 	{
 		Parallel = 0x1, Point = 0x2, Spot = 0x3
 	};
-	enum class Property
+	enum class Property : uint8_t
 	{
 		Position = 0x1,
 		Ambient = 0x2,
@@ -100,7 +100,7 @@ public:
 		Specular = 0x8,
 		Atten = 0x10
 	};
-public:
+private:
 	Vertex position,
 		ambient,
 		diffuse,
@@ -111,16 +111,55 @@ public:
 	bool bLight;
 	float rangy, rangz, rdis,
 		angy, angz, dis;
-
+public:
 	Light(const Type type);
 	bool turn();
 	void move(const float dangy, const float dangz, const float ddis);
-	void SetProperty(const int prop, const float r, const float g, const float b, const float a = 1.0f);
+	void SetProperty(const uint8_t prop, const float r, const float g, const float b, const float a = 1.0f);
 	void SetProperty(const Property prop, const float r, const float g, const float b, const float a = 1.0f)
 	{
-		SetProperty(int(prop), r, g, b, a);
+		SetProperty(uint8_t(prop), r, g, b, a);
 	}
 	void SetLumi(const float lum);
+};
+
+class Material
+{
+public:
+	enum class Property : uint8_t
+	{
+		Ambient = 0x1,
+		Diffuse = 0x2,
+		Specular = 0x4,
+		Emission = 0x8,
+		Shiness = 0x10,
+		Reflect = 0x20,
+		Refract = 0x40,
+		RefractRate = 0x80
+	};
+private:
+	Vertex ambient,
+		diffuse,
+		specular,
+		emission;
+	float /*高光权重*/shiness,
+		/*反射比率*/reflect,
+		/*折射比率*/refract,
+		/*折射率*/rfr;
+public:
+	string name;
+	Material();
+	~Material();
+	void SetMtl(const uint8_t prop, const Vertex &);
+	void SetMtl(const Property prop, const float r, const float g, const float b)
+	{
+		SetMtl(uint8_t(prop), Vertex(r, g, b));
+	}
+	void SetMtl(const uint8_t prop, const float val);
+	void SetMtl(const Property prop, const float val)
+	{
+		SetMtl(uint8_t(prop), val);
+	}
 };
 
 class Camera

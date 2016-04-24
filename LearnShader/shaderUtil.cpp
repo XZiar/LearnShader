@@ -159,6 +159,12 @@ void oglProgram::setLight(const Light & light)
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 96, &light);
 }
 
+void oglProgram::setMaterial(const Material & mt)
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, ID_mtVBO);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 80, &mt);
+}
+
 void oglProgram::drawObject(const function<void(void)>& draw, const Vertex & vTrans, const Vertex & vRotate, const float fScale)
 {
 	mat4 rMat = glm::rotate(mat4(), vRotate.x * float(M_PI), vec3(1.0f, 0.0f, 0.0f));

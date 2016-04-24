@@ -12,7 +12,7 @@ static bool bMovPOI = false;
 static int sx, sy, mx, my;
 static Camera cam;
 static Light light(Light::Type::Parallel);
-static Model model;
+static Model model([](const Material & mt) { glProg.setMaterial(mt); });
 
 
 void CreateSphere(const float radius, const unsigned int rings, const unsigned int sectors, float *vertices, float *normals, float *texcoords, GLushort *indices)
@@ -184,6 +184,8 @@ void display(void)
 
 	glProg.drawObject([&]()
 	{
+		static const Material mt;
+		glProg.setMaterial(mt);
 		glBindVertexArray(ID_VAO[1]);
 		glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
 	}, Vertex(0.0f, -1.0f, 0.0f), Vertex(), 1.0f);

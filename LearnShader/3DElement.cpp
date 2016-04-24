@@ -167,17 +167,7 @@ Vertex &Vertex::operator*=(const float & right)
 }
 Vertex Vertex::operator*(const Vertex &v) const
 {
-#ifdef AVX_
-	__m256 mg14 = _mm256_set_m128(dat, v.dat),
-		mg23 = _mm256_set_m128(v.dat, dat);
-	__m256 t14 = _mm256_permute_ps(mg14, _MM_SHUFFLE(3, 0, 2, 1)),
-		t23 = _mm256_permute_ps(mg23, _MM_SHUFFLE(3, 1, 0, 2));
-	__m256 lr = _mm256_mul_ps(t14, t23);
-	__m128 *r = (__m128*)&lr.m256_f32[0], *l = (__m128*)&lr.m256_f32[4];
-	//__m256 tmp1a = _mm256_set_m128(_mm_sub_ps(*l, *r), _mm_sub_ps(*l, *r));
-	//return _mm256_extractf128_ps(tmp1a, 1);
-	return _mm_sub_ps(*l, *r);
-#elif defined(AVX)
+#ifdef AVX
 	__m128 t1 = _mm_permute_ps(dat, _MM_SHUFFLE(3, 0, 2, 1)),
 		t2 = _mm_permute_ps(v.dat, _MM_SHUFFLE(3, 1, 0, 2)),
 		t3 = _mm_permute_ps(dat, _MM_SHUFFLE(3, 1, 0, 2)),
@@ -298,18 +288,18 @@ void Light::move(const float dangy, const float dangz, const float ddis)
 	Coord_sph2car2(angy, angz, dis, position);
 }
 
-void Light::SetProperty(const int prop, float r, float g, float b, float a)
+void Light::SetProperty(const uint8_t prop, float r, float g, float b, float a)
 {
 	Vertex set(r, g, b, a);
-	if (prop & int(Property::Ambient))
+	if (prop & uint8_t(Property::Ambient))
 		ambient = set;
-	if (prop & int(Property::Diffuse))
+	if (prop & uint8_t(Property::Diffuse))
 		diffuse = set;
-	if (prop & int(Property::Specular))
+	if (prop & uint8_t(Property::Specular))
 		specular = set;
-	if (prop & int(Property::Atten))
+	if (prop & uint8_t(Property::Atten))
 		attenuation = set;
-	if (prop & int(Property::Position))
+	if (prop & uint8_t(Property::Position))
 		position = set;
 }
 
@@ -320,6 +310,46 @@ void Light::SetLumi(const float lum)
 	ambient *= ext;
 	diffuse *= ext;
 	specular *= ext;
+}
+
+
+
+Material::Material()
+{
+	name = "simple";
+	SetMtl((uint8_t)Property::Ambient | (uint8_t)Property::Diffuse, Vertex(0.588f, 0.588f, 0.588f));
+	SetMtl((uint8_t)Property::Emission | (uint8_t)Property::Specular, Vertex());
+	SetMtl((uint8_t)Property::Shiness, 10.0f);
+	SetMtl((uint8_t)Property::Reflect | (uint8_t)Property::Refract, 0.0f);
+	SetMtl((uint8_t)Property::RefractRate, 1.0f);
+}
+
+Material::~Material()
+{
+}
+
+void Material::SetMtl(const uint8_t prop, const Vertex & v)
+{
+	if (prop & (uint8_t)Property::Ambient)
+		ambient = v;
+	if (prop & (uint8_t)Property::Diffuse)
+		diffuse = v;
+	if (prop & (uint8_t)Property::Emission)
+		emission = v;
+	if (prop & (uint8_t)Property::Specular)
+		specular = v;
+}
+
+void Material::SetMtl(const uint8_t prop, const float val)
+{
+	if (prop & (uint8_t)Property::Shiness)
+		shiness = val;
+	if (prop & (uint8_t)Property::Reflect)
+		shiness = val;
+	if (prop & (uint8_t)Property::Refract)
+		shiness = val;
+	if (prop & (uint8_t)Property::RefractRate)
+		shiness = val;
 }
 
 

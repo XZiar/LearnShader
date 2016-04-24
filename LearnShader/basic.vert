@@ -28,7 +28,7 @@ layout(location = 3) in vec2 vertTexc;
 
 out perVert
 {
-	vec3 color;
+	vec3 cAmbient,cDiffuse,cSpecular;
 	vec3 norm;
 	vec2 texc;
 };
@@ -39,19 +39,16 @@ void main()
 	vec4 tmp = normMat * vec4(vertNorm, 1.0f);
 	norm = tmp.rgb;
 
-	vec3 baseColor = vec3(0.644f, 0.644f, 0.644f);
-	baseColor = norm;
-
-	color = baseColor * lights.ambient;
+	cAmbient = (material.ambient * lights.ambient).rgb;
 
 	vec3 lightRay = normalize(lights.position - vec4(vertPos, 1.0f)).rgb;
 	vec3 p2l = normalize(lights.position).rgb;
-	color += baseColor * lights.diffuse * max(dot(lightRay, p2l), 0.0f);
+	cDiffuse = (material.diffuse * lights.diffuse).rgb * max(dot(lightRay, p2l), 0.0f);
 
 	/* blinn-phong model */
 	vec3 eyeRay = normalize(gl_Position.rgb - camPos);
 	vec3 h = normalize(p2l - eyeRay);
 	float nn = max(dot(lightRay, h), 0.0f);
-	color += baseColor * lights.specular * nn * pow(nn, 10);
+	cSpecular = (material.specular * lights.specular).rgb * nn * pow(nn, 10);
 
 }

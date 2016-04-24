@@ -25,17 +25,21 @@ private:
 	vector<Vertex> vers;
 	vector<Normal> nors;
 	vector<Coord2D> txcs;
+
 	vector<vector<Point>> parts;
+	vector<Material> mtls;
+	vector<uint8_t> part_mtl;
 
 	wstring objname, mtlname;
+	const function<void(const Material &)> funSetMt;
 private:
 	void prepare();
 	int32_t loadobj(const wstring &objname);
-	int32_t loadmtl(const wstring &mtlname);
+	void loadmtl(const wstring &mtlname);
 	int32_t loadtex(const string &texname);
 	void reset();
 public:
-	Model() { };
+	Model(const function<void(const Material &)> & fun) : funSetMt(fun) { };
 	~Model();
 	int32_t loadOBJ(const wstring &objname, const wstring &mtlname);
 	void draw();

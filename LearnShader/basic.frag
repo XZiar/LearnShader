@@ -2,7 +2,7 @@
 
 in perVert
 {
-	vec3 color;
+	vec3 cAmbient,cDiffuse,cSpecular;
 	vec3 norm;
 	vec2 texc;
 };
@@ -11,5 +11,5 @@ out vec4 FragColor;
 
 void main() 
 {
-	FragColor = vec4(color, 1.0f);
+	FragColor = vec4(cAmbient + cDiffuse + cSpecular, 1.0f);
 }

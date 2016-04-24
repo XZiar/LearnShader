@@ -58,22 +58,22 @@ int32_t Model::loadobj(const wstring &objname)
 			txcs.push_back(tc);
 			break;
 		case pS('f', '*', '*')://triangle
-			if (num > 4)
-			{
-				ldr.parseInt(ele[1], &ti[0]);
-				ldr.parseInt(ele[2], &ti[3]);
-				ldr.parseInt(ele[3], &ti[6]);
-				ldr.parseInt(ele[4], &ti[9]);
+			ldr.parseInt(ele[1], &ti[0]);
+			ldr.parseInt(ele[2], &ti[3]);
+			ldr.parseInt(ele[3], &ti[6]);
 
-				part.push_back(move(
-					Point(vers[ti[0]], nors[ti[2]], txcs[ti[1]])
-				));
-				part.push_back(move(
-					Point(vers[ti[3]], nors[ti[5]], txcs[ti[4]])
-				));
-				part.push_back(move(
-					Point(vers[ti[6]], nors[ti[8]], txcs[ti[7]])
-				));
+			part.push_back(move(
+				Point(vers[ti[0]], nors[ti[2]], txcs[ti[1]])
+			));
+			part.push_back(move(
+				Point(vers[ti[3]], nors[ti[5]], txcs[ti[4]])
+			));
+			part.push_back(move(
+				Point(vers[ti[6]], nors[ti[8]], txcs[ti[7]])
+			));
+			if (num > 4)//quad
+			{
+				ldr.parseInt(ele[4], &ti[9]);
 
 				part.push_back(move(
 					Point(vers[ti[0]], nors[ti[2]], txcs[ti[1]])
@@ -85,22 +85,6 @@ int32_t Model::loadobj(const wstring &objname)
 					Point(vers[ti[9]], nors[ti[11]], txcs[ti[10]])
 				));
 			}
-			else
-			{
-				ldr.parseInt(ele[1], &ti[0]);
-				ldr.parseInt(ele[2], &ti[3]);
-				ldr.parseInt(ele[3], &ti[6]);
-
-				part.push_back(move(
-					Point(vers[ti[0]], nors[ti[2]], txcs[ti[1]])
-				));
-				part.push_back(move(
-					Point(vers[ti[3]], nors[ti[5]], txcs[ti[4]])
-				));
-				part.push_back(move(
-					Point(vers[ti[6]], nors[ti[8]], txcs[ti[7]])
-				));
-			}
 			break;
 		case pS('u', 's', 'e')://object part
 			if (!bFirstO)
@@ -110,11 +94,11 @@ int32_t Model::loadobj(const wstring &objname)
 				part.reserve(2000);
 			}
 			bFirstO = false;
-			/*int8_t a = mtls.size();
+			uint8_t a = mtls.size();
 			while (--a > 0)
 				if (mtls[a].name == ele[1])
 					break;
-			part_mtl.push_back(a);*/
+			part_mtl.push_back(a);
 			break;
 		}
 	}
@@ -128,7 +112,7 @@ int32_t Model::loadobj(const wstring &objname)
 	return parts.size();
 }
 
-int32_t Model::loadmtl(const wstring &mtlname)
+void Model::loadmtl(const wstring &mtlname)
 {
 	Loader ldr(mtlname);
 	string ele[5];
@@ -139,12 +123,12 @@ int32_t Model::loadmtl(const wstring &mtlname)
 		bFirstM = true;
 
 	//clean
-/*
+
 	Material mtl;
 	mtls.push_back(mtl);
-	mtl_tex.push_back(cur_tex_id);
+	//mtl_tex.push_back(cur_tex_id);
+	
 	//load
-
 	while (true)
 	{
 		num = ldr.read(ele);
@@ -158,30 +142,29 @@ int32_t Model::loadmtl(const wstring &mtlname)
 			if (!bFirstM)
 			{
 				mtls.push_back(mtl);
-				mtl_tex.push_back(cur_tex_id);
-				//mtl = Material();
+				//mtl_tex.push_back(cur_tex_id);
 			}
 			mtl.name = ele[1];
 			cur_tex_id = -1;
 			bFirstM = false;
 			break;
 		case pS('K', 'a', '*')://ambient
-			mtl.SetMtl(MY_MODEL_AMBIENT, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
+			mtl.SetMtl(Material::Property::Ambient, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
 			break;
 		case pS('K', 'd', '*')://diffuse
-			mtl.SetMtl(MY_MODEL_DIFFUSE, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
+			mtl.SetMtl(Material::Property::Diffuse, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
 			break;
 		case pS('K', 's', '*')://specular
-			mtl.SetMtl(MY_MODEL_SPECULAR, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
+			mtl.SetMtl(Material::Property::Specular, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
 			break;
 		case pS('K', 'e', '*')://emission
-			mtl.SetMtl(MY_MODEL_EMISSION, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
+			mtl.SetMtl(Material::Property::Emission, atof(ele[1].c_str()), atof(ele[2].c_str()), atof(ele[3].c_str()));
 			break;
 		case pS('N','s','*')://shiness
-			mtl.SetMtl(MY_MODEL_SHINESS, 0, 0, 0, atof(ele[1].c_str()));
+			mtl.SetMtl(Material::Property::Shiness, atof(ele[1].c_str()));
 			break;
 		case pS('m', 'a', 'p')://Texture
-			if (ele[0] == "map_Kd****")
+			/*if (ele[0] == "map_Kd****")
 			{
 				auto loff = ele[1].find_last_of('\\'),
 					roff = ele[1].find_last_of('.');
@@ -199,14 +182,13 @@ int32_t Model::loadmtl(const wstring &mtlname)
 					loadtex(ele[1]);
 					cur_tex_id = texs.size() - 1;
 				}
-			}
+			}*/
 			break;
 		}
 	}
 	mtls.push_back(mtl);
-	mtl_tex.push_back(cur_tex_id);
-	*/
-	return int32_t();
+	//mtl_tex.push_back(cur_tex_id);
+	return;
 }
 
 int32_t Model::loadtex(const string &texname)
@@ -240,17 +222,22 @@ int32_t Model::loadtex(const string &texname)
 
 void Model::reset()
 {
+	auto partCnt = ID_VAOs.size();
+	if (partCnt > 0)
+	{
+		glDeleteVertexArrays(partCnt, &ID_VAOs[0]);
+		ID_VAOs.clear();
+		glDeleteBuffers(partCnt, &ID_VBOs[0]);
+		ID_VBOs.clear();
+	}
 	//glDeleteTextures(texs.size(), texList);
 	memset(texList, 0x0, sizeof(texList));
 
 	//mtl_tex.swap(vector<int8_t>());
-	//part_mtl.swap(vector<int8_t>());
+	part_mtl.swap(vector<uint8_t>());
 	//texs.swap(vector<Texture>());
-	//mtls.swap(vector<Material>());
-	//parts.swap(vector<vector<Triangle>>());
-	//octclparts.swap(vector<vector<clTri>>());
-	//borders.swap(vector<Vertex>());
-	//bboxs.swap(vector<Vertex>());
+	mtls.swap(vector<Material>());
+	parts.swap(vector<vector<Point>>());
 
 	vers.swap(vector<Vertex>());
 	nors.swap(vector<Normal>());
@@ -261,12 +248,11 @@ void Model::prepare()
 {
 	GLuint IDvaos[64], IDvbos[64];
 	int partCnt = parts.size();
+
 	glGenVertexArrays(partCnt, IDvaos);
-	glGenBuffers(partCnt, IDvbos);
-	ID_VBOs.clear();
-	ID_VBOs.assign(IDvbos, IDvbos + partCnt);
-	ID_VAOs.clear();
 	ID_VAOs.assign(IDvaos, IDvaos + partCnt);
+	glGenBuffers(partCnt, IDvbos);
+	ID_VBOs.assign(IDvbos, IDvbos + partCnt);
 	
 	for (int a = 0; a < partCnt; a++)
 	{
@@ -290,10 +276,11 @@ Model::~Model()
 	reset();
 }
 
-int32_t Model::loadOBJ(const wstring &objname, const wstring &mtlname)
+int32_t Model::loadOBJ(const wstring & objn, const wstring & mtln)
 {
-	this->objname = objname, this->mtlname = mtlname;
+	objname = objn, mtlname = mtln;
 	reset();
+	loadmtl(mtlname);
 	loadobj(objname);
 	prepare();
 	return 1;
@@ -304,6 +291,7 @@ void Model::draw()
 	int partCnt = parts.size();
 	for (int a = 0; a < partCnt; a++)
 	{
+		funSetMt(mtls[part_mtl[a]]);
 		glBindVertexArray(ID_VAOs[a]);
 		glDrawArrays(GL_TRIANGLES, 0, parts[a].size());
 	}
