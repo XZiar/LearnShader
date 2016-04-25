@@ -60,7 +60,7 @@ public:
 
 	void setProject(const Camera &, const int wdWidth, const int wdHeight);
 	void setCamera(const Camera &);
-	void setLight(const Light &);
+	void setLight(const uint8_t id, const Light &);
 	void setMaterial(const Material &);
 	void drawObject(const function<void(void)> &, const Vertex & vTrans, const Vertex & vRotate, const float fScale);
 };

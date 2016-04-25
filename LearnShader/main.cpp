@@ -6,12 +6,12 @@
 static oglProgram glProg;
 
 static GLuint ID_VAO[4], ID_vertVBO[4], ID_normVBO[4], ID_colorVBO[4], ID_texcVBO[4], ID_idxVBO[4];
-//static GLuint ID_lgtVBO;
+static int LightID = 0;
 
 static bool bMovPOI = false;
 static int sx, sy, mx, my;
 static Camera cam;
-static Light light(Light::Type::Parallel);
+static vector<Light> lights;
 static Model model([](const Material & mt) { glProg.setMaterial(mt); });
 
 
@@ -116,6 +116,13 @@ void setSphere()
 
 }
 
+void setTitle()
+{
+	char str[64];
+	sprintf_s(str, "Light:%d", LightID);
+	glutSetWindowTitle(str);
+}
+
 void init(void)
 {
 	glewInit();
@@ -154,6 +161,10 @@ void init(void)
 	glGenBuffers(4, ID_texcVBO);
 	glGenBuffers(4, ID_idxVBO);
 	
+	//prepare light
+	lights.push_back(Light(Light::Type::Parallel));
+	lights.push_back(Light(Light::Type::Point));
+
 	setTriangles();
 	setSphere();
 	model.loadOBJ(L"F:\\Project\\RayTrace\\objs\\0.obj", L"F:\\Project\\RayTrace\\objs\\0.mtl");
@@ -176,19 +187,24 @@ void display(void)
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glProg.setLight(light);
-
 	glProg.setCamera(cam);
 
+	glProg.setLight(0, lights[0]);
+	glProg.setLight(1, lights[1]);
+
 	//draw light
-	glProg.drawObject([&]()
+	for (const Light & lgt : lights)
 	{
-		Material mt;
+		static Material mt;
 		mt.SetMtl(Material::Property::Emission, 0.8f, 0.8f, 0.2f);
-		glProg.setMaterial(mt);
-		glBindVertexArray(ID_VAO[1]);
-		glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
-	}, light.position, Vertex(), 0.1f);
+
+		glProg.drawObject([&]()
+		{
+			glProg.setMaterial(mt);
+			glBindVertexArray(ID_VAO[1]);
+			glDrawElements(GL_QUADS, 79 * 79 * 4, GL_UNSIGNED_SHORT, NULL);
+		}, lgt.position, Vertex(), 0.1f);
+	}
 
 	glProg.drawObject([&]()
 	{
@@ -226,14 +242,21 @@ void onKeyboard(int key, int x, int y)
 		cam.pitch(3); break;
 	case GLUT_KEY_DOWN:
 		cam.pitch(-3); break;
+	case GLUT_KEY_PAGE_UP:
+		LightID++; break;
+	case GLUT_KEY_PAGE_DOWN:
+		LightID--; break;
 	default:
 		break;
 	}
+	setTitle();
 	glutPostRedisplay();
 }
 
 void onKeyboard(unsigned char key, int x, int y)
 {
+	Light & lgt = lights[LightID];
+
 	switch (key)
 	{
 	//move light
@@ -246,17 +269,17 @@ void onKeyboard(unsigned char key, int x, int y)
 		switch (key)
 		{
 		case '2':
-			light.move(3, 0, 0); break;
+			lgt.move(3, 0, 0); break;
 		case '4':
-			light.move(0, -3, 0); break;
+			lgt.move(0, -3, 0); break;
 		case '6':
-			light.move(0, 3, 0); break;
+			lgt.move(0, 3, 0); break;
 		case '8':
-			light.move(-3, 0, 0); break;
+			lgt.move(-3, 0, 0); break;
 		case 43://+
-			light.move(0, 0, 1); break;
+			lgt.move(0, 0, 1); break;
 		case 45://-
-			light.move(0, 0, -1); break;
+			lgt.move(0, 0, -1); break;
 		}
 		break;
 	default:
@@ -311,6 +334,7 @@ int main(int argc, char** argv)
 	glutInitWindowSize(cam.width, cam.height);
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow(argv[0]);
+	setTitle();
 	
 	init();
 

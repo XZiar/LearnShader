@@ -127,7 +127,9 @@ void oglProgram::use()
 	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
 	glBindBufferBase(GL_UNIFORM_BUFFER, IDX_Uni_Light, ID_lgtVBO);
 	glUniformBlockBinding(programID, idx, IDX_Uni_Light);
-	glBufferData(GL_UNIFORM_BUFFER, 96, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 96 * 8, NULL, GL_DYNAMIC_DRAW);
+	uint8_t empty[96 * 8] = { 0 };
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 96 * 8, empty);
 
 	//set material
 	idx = glGetUniformBlockIndex(programID, "materialBlock");
@@ -153,10 +155,10 @@ void oglProgram::setCamera(const Camera & cam)
 	glUniform3fv(IDX_camPos, 1, cam.position);
 }
 
-void oglProgram::setLight(const Light & light)
+void oglProgram::setLight(const uint8_t id, const Light & light)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, ID_lgtVBO);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, 96, &light);
+	glBufferSubData(GL_UNIFORM_BUFFER, 96 * id, 96, &light);
 }
 
 void oglProgram::setMaterial(const Material & mt)

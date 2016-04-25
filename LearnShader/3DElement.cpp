@@ -246,16 +246,16 @@ Triangle::Triangle(const Vertex &va, const Normal &na, const Coord2D &ta, const 
 
 
 
-Light::Light(const Type type)
+Light::Light(const Type t)
 {
-	this->type = (int)type;
+	type = (int)t;
 	bLight = true;
 	rangy = 90, rangz = 0, rdis = 16;
 	move(0, 0, 0);
 	SetProperty((int)Property::Ambient, 0.05f, 0.05f, 0.05f);
 	SetProperty((int)Property::Diffuse | (int)Property::Specular, 1.0f, 1.0f, 1.0f);
 	SetProperty((int)Property::Atten, 1.0f, 0.0f, 0.0f);
-	switch (type)
+	switch (t)
 	{
 	case Type::Parallel:
 		position.alpha = 0.0f;
